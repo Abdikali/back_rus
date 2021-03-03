@@ -14,6 +14,27 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.post("/login", async (req, res) => {
+  const {email, password} = req.body;
+  try{
+    const user = await User.findByCredentials(email, password);
+    const token = await user.generateToken()
+    res.json({error: false, user, token});
+  }catch({message}){
+    res.status(500).json({error: true, message});
+  }
+});
+
+router.post("/logout", auth, async(req, res) => {
+  try{
+    req.user.tokens = req.user.tokens.filter(token => token.token !== req.token);
+    await req.user.save();
+    res.json({error: false, message: "Logged out"});
+  }catch({message}){
+    res.status(500).json({error: true, message});
+  }
+})
+
 router.get("/", auth, async (req, res) => {
   try{
     const users = await User.find({});
